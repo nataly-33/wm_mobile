@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/auth/login_screen.dart';
+import 'features/tareas/tareas_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
       home: const LoginScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/tareas': (context) => const PlaceholderScreen(title: 'Tareas'),
+        '/tareas': (context) => const TareasScreen(),
         '/monitor': (context) => const PlaceholderScreen(title: 'Monitor'),
       },
     );
