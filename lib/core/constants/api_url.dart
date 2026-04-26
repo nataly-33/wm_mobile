@@ -1,14 +1,27 @@
 class ApiConstants {
-  // Para desarrollo local con emulador Android (la máquina host se accede vía 10.0.2.2)
-  static const String baseUrl = 'http://10.0.2.2:8080/api/v1';
+  // Dispositivo físico en red local: usa IP local
+  static const String baseUrl = 'http://192.168.0.15:8080/api/v1';
+  // WebSocket nativo (sin SockJS) para Flutter
+  static const String wsUrl = 'ws://192.168.0.15:8080/ws-native';
 
-  // Para desarrollo local en iOS
-  // static const String baseUrl = 'http://localhost:8080/api/v1';
+  // Para emulador Android: 10.0.2.2 apunta al localhost del host
+  // static const String baseUrl = 'http://10.0.2.2:8080/api/v1';
+  // static const String wsUrl = 'ws://10.0.2.2:8080/ws-native';
 
-  // Para producción en Azure
+  // Producción Azure
   // static const String baseUrl = 'https://wm-backend.azurewebsites.net/api/v1';
+  // static const String wsUrl = 'wss://wm-backend.azurewebsites.net/ws-native';
 
-  static const String registerEndpoint = '/auth/registro';
+  // Auth
   static const String loginEndpoint = '/auth/login';
+  static const String registerEndpoint = '/auth/registro';
   static const String healthEndpoint = '/auth/health';
+
+  // Recursos
+  static const String ejecucionesBase = '/ejecuciones';
+  static const String tramitesBase = '/tramites';
+  static const String formulariosBase = '/formularios';
+  static const String politicasBase = '/politicas';
+  static const String archivosBase = '/archivos';
+  static const String usuariosBase = '/usuarios';
 }
