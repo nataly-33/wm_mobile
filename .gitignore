@@ -46,8 +46,10 @@ app.*.map.json
 
 # Local environment and secrets
 .env
+.env.production
 .env.local
-**/.env
+android/.env
+ios/.env
 android/local.properties
 android/key.properties
 android/app/google-services.json

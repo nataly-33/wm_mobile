@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'features/auth/login_screen.dart';
 import 'features/tareas/tareas_screen.dart';
@@ -11,6 +13,11 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: kReleaseMode ? '.env.production' : '.env');
+  } catch (e) {
+    debugPrint('[main] Error cargando .env: $e');
+  }
   final authService = AuthService();
 
   try {
