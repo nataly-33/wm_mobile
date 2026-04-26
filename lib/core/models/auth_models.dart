@@ -5,6 +5,7 @@ class AuthResponse {
   final String email;
   final String rol;
   final String? departamentoId;
+  final String? departamentoNombre;
 
   AuthResponse({
     required this.token,
@@ -13,6 +14,7 @@ class AuthResponse {
     required this.email,
     required this.rol,
     this.departamentoId,
+    this.departamentoNombre,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class AuthResponse {
       email: json['email'] as String,
       rol: json['rol'] as String,
       departamentoId: json['departamentoId'] as String?,
+      departamentoNombre: json['departamentoNombre'] as String?,
     );
   }
 
@@ -34,6 +37,7 @@ class AuthResponse {
       'email': email,
       'rol': rol,
       'departamentoId': departamentoId,
+      'departamentoNombre': departamentoNombre,
     };
   }
 }
@@ -64,6 +68,7 @@ class User {
   final String email;
   final String rol;
   final String? departamentoId;
+  final String? departamentoNombre;
 
   User({
     required this.id,
@@ -71,6 +76,7 @@ class User {
     required this.email,
     required this.rol,
     this.departamentoId,
+    this.departamentoNombre,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -80,6 +86,7 @@ class User {
       email: json['email'] as String,
       rol: json['rol'] as String,
       departamentoId: json['departamentoId'] as String?,
+      departamentoNombre: json['departamentoNombre'] as String?,
     );
   }
 
@@ -90,6 +97,7 @@ class User {
       'email': email,
       'rol': rol,
       'departamentoId': departamentoId,
+      'departamentoNombre': departamentoNombre,
     };
   }
 }
