@@ -6,7 +6,7 @@ import '../models/auth_models.dart';
 import '../models/ejecucion_models.dart';
 
 class ApiService {
-  final String baseUrl = ApiConstants.baseUrl;
+  String get baseUrl => ApiConstants.baseUrl;
 
   Map<String, String> _headers(String? token) {
     final h = {'Content-Type': 'application/json'};
