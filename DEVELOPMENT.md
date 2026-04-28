@@ -251,13 +251,18 @@ void dispose() {
 ```
 1. App inicia → NotificationService.init() en main.dart
 2. Se obtiene FCM token del dispositivo
-3. Se envía al backend: PUT /api/v1/usuarios/{id}/fcm-token
-4. Backend envía push cuando corresponde (nueva tarea, trámite completado)
-5. App recibe la push:
-   - Foreground: flutter_local_notifications muestra banner
-   - Background/terminada: sistema operativo muestra la notificación
-6. Tap en notificación → navegar a la pantalla correspondiente
+3. Al hacer login: AuthService._registrarFcmToken() → PUT /api/v1/usuarios/{id}/fcm-token
+4. Si el token rota: messaging.onTokenRefresh → callback actualiza en backend
+5. Backend envía push cuando corresponde (nueva tarea, trámite completado)
+6. App recibe la push:
+   - Foreground: flutter_local_notifications muestra banner (canal "workflow_channel")
+   - Background/terminada: sistema operativo muestra la notificación automáticamente
+7. Tap en notificación → _navegarSegunTipo(data['tipo']) → /tareas o /monitor
 ```
+
+### Nota importante — ícono de notificación
+
+El canal Android requiere un ícono llamado `ic_notification` en `android/app/src/main/res/drawable*/`. Si no existe, las notificaciones locales (foreground) fallan silenciosamente. Las notificaciones de background siguen funcionando porque las maneja el sistema operativo.
 
 ### NotificationService
 

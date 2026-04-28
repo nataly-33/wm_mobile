@@ -78,8 +78,8 @@ class ApiConstants {
   // Para dispositivo físico (usa la IP de tu máquina en la red local)
   // static const String baseUrl = 'http://192.168.x.x:8080';
 
-  // Para producción (Azure)
-  // static const String baseUrl = 'https://wm-backend.azurewebsites.net';
+  // Para producción (Render)
+  // static const String baseUrl = 'https://wm-backend.onrender.com';
 }
 ```
 
@@ -102,37 +102,33 @@ flutter run -d emulator-5554
 
 ```
 lib/
-├── main.dart                       ← Entry point
-├── app.dart                        ← MaterialApp con rutas
+├── main.dart                         ← Entry point: Firebase, FCM, rutas, tema
+├── firebase_options.dart             ← Config Firebase (auto-generado, no editar)
 │
 ├── core/
-│   ├── config/
-│   │   └── dio_client.dart         ← (Futuro: si se migra a Dio)
 │   ├── constants/
-│   │   └── api_url.dart            ← URLs del backend
+│   │   └── api_url.dart              ← URL base del backend (cambiar aquí para dev/prod)
 │   ├── models/
-│   │   ├── api_response.dart       ← Modelo de respuesta estándar
-│   │   └── user.dart               ← Modelo del usuario logueado
+│   │   ├── auth_models.dart          ← LoginRequest, AuthResponse, User
+│   │   └── ejecucion_models.dart     ← EjecucionDetallada, Formulario, Campo
 │   └── services/
-│       ├── auth_service.dart        ← Login, logout, JWT storage
-│       ├── api_service.dart         ← Llamadas HTTP con JWT
-│       ├── socket_service.dart      ← WebSockets en tiempo real
-│       └── notification_service.dart ← Push notifications FCM
+│       ├── api_service.dart          ← Cliente HTTP centralizado (todas las llamadas al backend)
+│       ├── auth_service.dart         ← Login, logout, JWT storage, sincronización FCM token
+│       ├── navigation_service.dart   ← NavigatorKey global (para push notifications)
+│       ├── socket_service.dart       ← WebSocket con socket_io_client (monitor)
+│       └── notification_service.dart ← FCM: permisos, canal Android, foreground/background
 │
 ├── features/
 │   ├── auth/
-│   │   └── login_screen.dart       ← Pantalla de login
-│   │
-│   ├── funcionario/
-│   │   ├── tareas_screen.dart      ← Lista de tareas pendientes
-│   │   └── ejecutar_tarea_screen.dart ← Rellenar formulario del nodo
-│   │
-│   └── admin/
-│       └── monitor_screen.dart     ← Monitor verde/amarillo/rojo
-│
-└── widgets/
-    └── common_widgets.dart         ← Botones, inputs, badges reutilizables
+│   │   └── login_screen.dart         ← Pantalla de login
+│   ├── tareas/
+│   │   ├── tareas_screen.dart        ← Lista de tareas asignadas (pull-to-refresh)
+│   │   └── ejecutar_tarea_screen.dart ← Formulario dinámico por tipo de campo
+│   └── monitor/
+│       └── monitor_screen.dart       ← Monitor en tiempo real (verde/amarillo/rojo)
 ```
+
+> Ver [GUIA_ARCHIVOS.md](GUIA_ARCHIVOS.md) para el mapa detallado de qué archivo controla cada sección de cada pantalla.
 
 ---
 
@@ -151,7 +147,7 @@ lib/
 | Pantalla | Descripción |
 |----------|-------------|
 | Login | Autenticación con email y contraseña |
-| Monitor | Diagrama de la política con colores: 🟢 verde, 🟡 amarillo, 🔴 rojo. Actualizado en tiempo real por WebSocket |
+| Monitor | Diagrama de la política con colores: verde (nodo vacío), amarillo (activo), rojo (rechazado). Actualizado en tiempo real por WebSocket |
 
 ---
 
