@@ -31,15 +31,22 @@ class ApiService {
 
   Future<AuthResponse> login(String email, String password) async {
     final url = Uri.parse('$baseUrl${ApiConstants.loginEndpoint}');
-    final response = await http.post(url,
-        headers: _headers(null),
-        body: jsonEncode({'email': email, 'password': password}));
-
-    final json = _parseBody(response);
-    if (response.statusCode == 200 && json?['data'] != null) {
-      return AuthResponse.fromJson(json['data'] as Map<String, dynamic>);
+    debugPrint('[ApiService] LOGIN URL: $url');
+    try {
+      final response = await http.post(url,
+          headers: _headers(null),
+          body: jsonEncode({'email': email, 'password': password}));
+      debugPrint('[ApiService] LOGIN STATUS: ${response.statusCode}');
+      debugPrint('[ApiService] LOGIN BODY: ${response.body}');
+      final json = _parseBody(response);
+      if (response.statusCode == 200 && json?['data'] != null) {
+        return AuthResponse.fromJson(json['data'] as Map<String, dynamic>);
+      }
+      throw Exception(_extractError(json, 'Error al iniciar sesión'));
+    } catch (e) {
+      debugPrint('[ApiService] LOGIN EXCEPTION: $e');
+      rethrow;
     }
-    throw Exception(_extractError(json, 'Error al iniciar sesión'));
   }
 
   Future<AuthResponse> registro(

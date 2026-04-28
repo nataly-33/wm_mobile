@@ -136,6 +136,16 @@ class AuthService {
 
   // Logout
   Future<void> logout() async {
+    try {
+      final token = await getToken();
+      final userId = _currentUser?.id;
+      if (token != null && userId != null && userId.isNotEmpty) {
+        await _apiService.actualizarFcmToken(userId, '', token);
+        debugPrint('[AuthService] FCM token limpiado en logout');
+      }
+    } catch (e) {
+      debugPrint('[AuthService] No se pudo limpiar FCM token: $e');
+    }
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _userKey);
     _currentUser = null;
