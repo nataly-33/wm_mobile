@@ -61,6 +61,8 @@ class FormularioCampo {
   final bool requerido;
   final bool esCampoPrioridad;
   final List<String> opciones;
+  final int? filas;
+  final List<String> columnas;
 
   const FormularioCampo({
     required this.nombre,
@@ -69,6 +71,8 @@ class FormularioCampo {
     required this.requerido,
     this.esCampoPrioridad = false,
     this.opciones = const [],
+    this.filas,
+    this.columnas = const [],
   });
 
   factory FormularioCampo.fromJson(Map<String, dynamic> json) {
@@ -79,6 +83,11 @@ class FormularioCampo {
       requerido: json['requerido'] as bool? ?? false,
       esCampoPrioridad: json['esCampoPrioridad'] as bool? ?? false,
       opciones: (json['opciones'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      filas: json['filas'] as int?,
+      columnas: (json['columnas'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],

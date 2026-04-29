@@ -61,7 +61,21 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
       _formulario = await _api.obtenerFormularioPorNodo(_tarea!.nodoId, token);
       if (_formulario != null) {
         for (final campo in _formulario!.campos) {
-          _respuesta[campo.nombre] = '';
+          switch (campo.tipo) {
+            case 'CHECKBOX':
+              _respuesta[campo.nombre] = <String>[];
+              break;
+            case 'GRID':
+              // Inicializar con una fila vacía
+              final filaVacia = <String, String>{for (var c in campo.columnas) c: ''};
+              _respuesta[campo.nombre] = [filaVacia];
+              break;
+            case 'ETIQUETA':
+              // Sin valor
+              break;
+            default:
+              _respuesta[campo.nombre] = '';
+          }
         }
       }
     } catch (e) {
@@ -115,9 +129,18 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
   bool _validar() {
     if (_formulario == null) return true;
     for (final campo in _formulario!.campos) {
+      if (campo.tipo == 'ETIQUETA') continue;
       if (campo.requerido) {
         final val = _respuesta[campo.nombre];
-        if (val == null || val.toString().isEmpty) {
+        bool vacio = false;
+        if (val == null) {
+          vacio = true;
+        } else if (val is String && val.isEmpty) {
+          vacio = true;
+        } else if (val is List && val.isEmpty) {
+          vacio = true;
+        }
+        if (vacio) {
           setState(() { _error = 'El campo "${campo.etiqueta}" es requerido'; });
           return false;
         }
@@ -324,6 +347,29 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
 
   Widget _buildInputPorTipo(FormularioCampo campo) {
     switch (campo.tipo) {
+      // ── ETIQUETA: solo texto descriptivo ──────────────────────────
+      case 'ETIQUETA':
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _colorCard,
+            borderRadius: BorderRadius.circular(8),
+            border: Border(left: BorderSide(color: _colorMuted, width: 3)),
+          ),
+          child: Text(campo.etiqueta, style: const TextStyle(color: _colorMuted, fontSize: 13)),
+        );
+
+      // ── TEXTAREA: campo de texto multilínea ───────────────────────
+      case 'TEXTAREA':
+        return TextFormField(
+          maxLines: campo.filas ?? 3,
+          style: const TextStyle(color: _colorTexto),
+          decoration: _inputDecoration(),
+          initialValue: _respuesta[campo.nombre] as String? ?? '',
+          onChanged: (v) => _respuesta[campo.nombre] = v,
+        );
+
+      // ── SELECCION: dropdown ───────────────────────────────────────
       case 'SELECCION':
         return DropdownButtonFormField<String>(
           value: (_respuesta[campo.nombre] as String?)?.isEmpty == true ? null : _respuesta[campo.nombre] as String?,
@@ -336,6 +382,59 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
           onChanged: (v) => setState(() => _respuesta[campo.nombre] = v ?? ''),
         );
 
+      // ── RADIO: botones de opción ──────────────────────────────────
+      case 'RADIO':
+        return Column(
+          children: campo.opciones.map((op) => RadioListTile<String>(
+            title: Text(op, style: const TextStyle(color: _colorTexto, fontSize: 14)),
+            value: op,
+            groupValue: _respuesta[campo.nombre] as String?,
+            activeColor: _colorPrimario,
+            tileColor: _colorCard,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+              side: BorderSide(
+                color: _respuesta[campo.nombre] == op ? _colorPrimario : _colorBorde,
+              ),
+            ),
+            onChanged: (v) => setState(() => _respuesta[campo.nombre] = v ?? ''),
+          )).toList(),
+        );
+
+      // ── CHECKBOX: casillas de verificación ───────────────────────
+      case 'CHECKBOX':
+        final seleccionados = (_respuesta[campo.nombre] as List<dynamic>?)?.cast<String>() ?? [];
+        return Column(
+          children: campo.opciones.map((op) {
+            final marcado = seleccionados.contains(op);
+            return CheckboxListTile(
+              title: Text(op, style: const TextStyle(color: _colorTexto, fontSize: 14)),
+              value: marcado,
+              activeColor: _colorPrimario,
+              checkColor: _colorFondo,
+              tileColor: _colorCard,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+                side: BorderSide(color: marcado ? _colorPrimario : _colorBorde),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  final lista = List<String>.from(seleccionados);
+                  if (val == true) {
+                    lista.add(op);
+                  } else {
+                    lista.remove(op);
+                  }
+                  _respuesta[campo.nombre] = lista;
+                });
+              },
+            );
+          }).toList(),
+        );
+
+      // ── NUMERO ────────────────────────────────────────────────────
       case 'NUMERO':
         return TextFormField(
           keyboardType: TextInputType.number,
@@ -344,6 +443,7 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
           onChanged: (v) => _respuesta[campo.nombre] = v,
         );
 
+      // ── FECHA ─────────────────────────────────────────────────────
       case 'FECHA':
         return GestureDetector(
           onTap: () async {
@@ -351,7 +451,7 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
               context: context,
               initialDate: DateTime.now(),
               firstDate: DateTime(2020),
-              lastDate: DateTime(2030),
+              lastDate: DateTime(2035),
               builder: (ctx, child) => Theme(
                 data: ThemeData.dark().copyWith(colorScheme: const ColorScheme.dark(primary: _colorPrimario)),
                 child: child!,
@@ -384,13 +484,66 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
           ),
         );
 
+      // ── IMAGEN / ARCHIVO ──────────────────────────────────────────
       case 'IMAGEN':
         return _buildUploadArea(campo.nombre, esImagen: true);
 
       case 'ARCHIVO':
         return _buildUploadArea(campo.nombre, esImagen: false);
 
-      default: // TEXTO
+      // ── GRID / TABLA (versión simplificada para mobile) ───────────
+      case 'GRID':
+        final columnas = campo.columnas ?? [];
+        final filas = (_respuesta[campo.nombre] as List<dynamic>?) ?? [];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (filas.isEmpty)
+              Text('Sin filas. Usa la web para editar tablas complejas.',
+                style: const TextStyle(color: _colorMuted, fontSize: 12)),
+            ...filas.asMap().entries.map((entry) {
+              final fila = entry.value as Map<dynamic, dynamic>;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: _colorBorde),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  children: columnas.map((col) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: TextFormField(
+                      initialValue: fila[col]?.toString() ?? '',
+                      style: const TextStyle(color: _colorTexto, fontSize: 13),
+                      decoration: _inputDecoration().copyWith(labelText: col, labelStyle: const TextStyle(color: _colorMuted, fontSize: 12)),
+                      onChanged: (v) {
+                        setState(() {
+                          (filas[entry.key] as Map)[col] = v;
+                          _respuesta[campo.nombre] = filas;
+                        });
+                      },
+                    ),
+                  )).toList(),
+                ),
+              );
+            }),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  final nuevaFila = <String, String>{for (var c in columnas) c: ''};
+                  final lista = List<dynamic>.from(filas)..add(nuevaFila);
+                  _respuesta[campo.nombre] = lista;
+                });
+              },
+              icon: const Icon(Icons.add, size: 16, color: _colorPrimario),
+              label: const Text('+ Agregar fila', style: TextStyle(color: _colorPrimario, fontSize: 13)),
+            ),
+          ],
+        );
+
+      // ── TEXTO (default) ───────────────────────────────────────────
+      default:
         return TextFormField(
           style: const TextStyle(color: _colorTexto),
           decoration: _inputDecoration(),
