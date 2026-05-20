@@ -63,15 +63,17 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
         for (final campo in _formulario!.campos) {
           switch (campo.tipo) {
             case 'CHECKBOX':
-              _respuesta[campo.nombre] = <String>[];
+              _respuesta[campo.nombre] = <dynamic>[];
               break;
             case 'GRID':
-              // Inicializar con una fila vacía
-              final filaVacia = <String, String>{for (var c in campo.columnas) c: ''};
-              _respuesta[campo.nombre] = [filaVacia];
+              // Usar List<dynamic> y Map<String, dynamic> para evitar ClassCastException
+              final filaVacia = <String, dynamic>{
+                for (var c in campo.columnas) c: ''
+              };
+              _respuesta[campo.nombre] = <dynamic>[filaVacia];
               break;
             case 'ETIQUETA':
-              // Sin valor
+              // Sin valor — no se guarda
               break;
             default:
               _respuesta[campo.nombre] = '';
@@ -491,18 +493,21 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
       case 'ARCHIVO':
         return _buildUploadArea(campo.nombre, esImagen: false);
 
-      // ── GRID / TABLA (versión simplificada para mobile) ───────────
+      // ── GRID / TABLA ──────────────────────────────────────────────
       case 'GRID':
-        final columnas = campo.columnas ?? [];
-        final filas = (_respuesta[campo.nombre] as List<dynamic>?) ?? [];
+        final columnas = campo.columnas;
+        // Usar acceso dinámico para evitar ClassCastException con genéricos Dart
+        final rawVal = _respuesta[campo.nombre];
+        final filas = (rawVal is List) ? rawVal : <dynamic>[];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (filas.isEmpty)
-              Text('Sin filas. Usa la web para editar tablas complejas.',
+              Text('Sin filas.',
                 style: const TextStyle(color: _colorMuted, fontSize: 12)),
             ...filas.asMap().entries.map((entry) {
-              final fila = entry.value as Map<dynamic, dynamic>;
+              // Acceso via Map sin parámetros de tipo para evitar cast errors
+              final filaMap = entry.value;
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(8),
@@ -514,12 +519,15 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
                   children: columnas.map((col) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: TextFormField(
-                      initialValue: fila[col]?.toString() ?? '',
+                      initialValue: (filaMap is Map) ? (filaMap[col]?.toString() ?? '') : '',
                       style: const TextStyle(color: _colorTexto, fontSize: 13),
-                      decoration: _inputDecoration().copyWith(labelText: col, labelStyle: const TextStyle(color: _colorMuted, fontSize: 12)),
+                      decoration: _inputDecoration().copyWith(
+                        labelText: col,
+                        labelStyle: const TextStyle(color: _colorMuted, fontSize: 12),
+                      ),
                       onChanged: (v) {
                         setState(() {
-                          (filas[entry.key] as Map)[col] = v;
+                          if (filaMap is Map) filaMap[col] = v;
                           _respuesta[campo.nombre] = filas;
                         });
                       },
@@ -531,7 +539,7 @@ class _EjecutarTareaScreenState extends State<EjecutarTareaScreen> {
             TextButton.icon(
               onPressed: () {
                 setState(() {
-                  final nuevaFila = <String, String>{for (var c in columnas) c: ''};
+                  final nuevaFila = <String, dynamic>{for (var c in columnas) c: ''};
                   final lista = List<dynamic>.from(filas)..add(nuevaFila);
                   _respuesta[campo.nombre] = lista;
                 });
